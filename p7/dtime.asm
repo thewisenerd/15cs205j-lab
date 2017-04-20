@@ -2,6 +2,9 @@ data segment
 	HOUR DB ?
 	MIN DB ?
 	SEC DB ?
+	AMPM DB 0
+	AMSTR DB 'AM',10,13,'$'
+	PMSTR DB 'PM',10,13,'$'
 data ends
 code segment
 assume cs:code, ds:data
@@ -31,6 +34,13 @@ time proc
 	MOV MIN,CL
 	MOV SEC,DH
 
+	; fix am/pm
+	CMP HOUR, 12
+	JB AM
+	SUB HOUR, 12
+	MOV AMPM, 1
+AM:
+
 	MOV AX, 0H
 	MOV AL, HOUR
 	AAM
@@ -49,6 +59,17 @@ time proc
 	MOV AL, SEC
 	AAM
 	dispnum
+
+	dispchar ' '
+	CMP AMPM, 1
+	JE PM
+	LEA DX, AMSTR
+	JMP ENDST
+PM:
+	LEA DX, PMSTR
+ENDST:
+	MOV AH, 09H
+	INT 21H
 
 	ret
 endp
